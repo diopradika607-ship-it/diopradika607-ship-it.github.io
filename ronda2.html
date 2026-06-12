@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ABSENSI RONDA RT 14 PRO</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:#f1f5f9;
+padding:20px;
+}
+
+.container{
+max-width:1400px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+box-shadow:0 2px 10px rgba(0,0,0,.1);
+margin-bottom:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+color:#0f172a;
+}
+
+h3{
+margin-bottom:15px;
+color:#334155;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+margin-bottom:15px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+border:1px solid #cbd5e1;
+border-radius:8px;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+margin:3px;
+}
+
+.btn-primary{
+background:#2563eb;
+color:white;
+}
+
+.btn-success{
+background:#16a34a;
+color:white;
+}
+
+.btn-danger{
+background:#dc2626;
+color:white;
+}
+
+.btn-warning{
+background:#f59e0b;
+color:white;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th{
+background:#2563eb;
+color:white;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+.total-box{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:15px;
+}
+
+.summary{
+background:#2563eb;
+color:white;
+padding:15px;
+border-radius:12px;
+text-align:center;
+font-size:20px;
+font-weight:bold;
+}
+
+@media(max-width:768px){
+
+table{
+font-size:12px;
+}
+
+button{
+width:100%;
+margin-top:5px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>ABSENSI RONDA RT 14 PRO</h1>
+
+<div class="grid">
+
+<div>
+<label>Hari</label>
+<select id="hari" onchange="tampilkanPetugas()">
+<option value="senin">Senin</option>
+<option value="selasa">Selasa</option>
+<option value="rabu">Rabu</option>
+<option value="kamis">Kamis</option>
+<option value="jumat">Jumat</option>
+<option value="sabtu">Sabtu</option>
+<option value="minggu">Minggu</option>
+</select>
+</div>
+
+<div>
+<label>Tanggal</label>
+<input type="number" id="tanggal">
+</div>
+
+<div>
+<label>Bulan</label>
+<input type="number" id="bulan">
+</div>
+
+<div>
+<label>Tahun</label>
+<input type="number" id="tahun">
+</div>
+
+<div>
+<label>Jimpitan (Rp)</label>
+<input type="number" id="jimpitan">
+</div>
+
+</div>
+
+<h3>Daftar Petugas</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>No</th>
+<th>Nama</th>
+<th>Status</th>
+<th>Keterangan</th>
+</tr>
+</thead>
+
+<tbody id="tabelPetugas"></tbody>
+
+</table>
+
+<br>
+
+<button class="btn-primary" onclick="simpanData()">Simpan</button>
+<button class="btn-success" onclick="exportCSV()">Export Excel</button>
+<button class="btn-danger" onclick="hapusSemua()">Hapus Semua</button>
+
+</div>
+
+<div class="card">
+
+<h3>Filter Laporan</h3>
+
+<div class="grid">
+
+<div>
+<label>Bulan</label>
+<input type="number" id="filterBulan">
+</div>
+
+<div>
+<label>Tahun</label>
+<input type="number" id="filterTahun">
+</div>
+
+<div>
+<label>&nbsp;</label>
+<button class="btn-primary" onclick="filterData()">Filter</button>
+</div>
+
+<div>
+<label>&nbsp;</label>
+<button class="btn-warning" onclick="tampilkanData()">Reset</button>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="total-box">
+
+<div class="summary">
+Total Jimpitan
+<br>
+Rp <span id="totalJimpitan">0</span>
+</div>
+
+<div class="summary">
+Jumlah Data
+<br>
+<span id="jumlahData">0</span>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Riwayat Absensi</h3>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Hari</th>
+<th>Nama</th>
+<th>Status</th>
+<th>Keterangan</th>
+<th>Tanggal</th>
+<th>Jimpitan</th>
+<th>Aksi</th>
+</tr>
+
+</thead>
+
+<tbody id="hasil"></tbody>
+
+</table>
+
+</div>
+
+</div>
+<script>
+
+const jadwal = {
+
+senin:[
+"AHSAN HABIBI",
+"EFENDI",
+"MAHRUS",
+"MUSA",
+"UDIN",
+"PRAYIT",
+"ADI",
+"CANIGIA",
+"",
+""
+],
+
+selasa:[
+"PAK DE AGUS",
+"EKO",
+"ZUHRI",
+"RIZAL",
+"DOBIT",
+"JOHAN",
+"KHUDORI",
+"FERNANDA",
+"YUDHA",
+"ADI R",
+"",
+""
+],
+
+rabu:[
+"HERMAN",
+"KHOIRUDIN",
+"EKA FANDI",
+"DWIKI",
+"RIZAL B",
+"SATRIA",
+"",
+""
+],
+
+kamis:[
+"SARNO",
+"ROKHIM",
+"ROSI",
+"KHOLIL",
+"SLAMET K",
+"ABIDIN",
+"SANOM",
+"HASANI",
+"",
+""
+],
+
+jumat:[
+"AGUS",
+"BUDI",
+"TOCEK",
+"SALIM",
+"GUNTUR",
+"KOMARUDIN",
+"",
+""
+],
+
+sabtu:[
+"NANANG S",
+"BAGUS",
+"DIO PRADIKA P",
+"ABSARI",
+"MUKHLAS",
+"RIFQI",
+"SLAMET SATE",
+"FANDY",
+"",
+""
+],
+
+minggu:[
+"NINDYA",
+"SUKADI",
+"QODIR",
+"AMIRUL",
+"JAYUS",
+"JAINUL (P MAD)",
+"ALI",
+"ALDI",
+"",
+""
+]
+
+};
+
+let data =
+JSON.parse(localStorage.getItem("absensiRonda")) || [];
+
+function tampilkanPetugas(){
+
+const hari =
+document.getElementById("hari").value;
+
+const tabel =
+document.getElementById("tabelPetugas");
+
+tabel.innerHTML="";
+
+jadwal[hari].forEach((nama,index)=>{
+
+tabel.innerHTML += `
+<tr>
+
+<td>${index+1}</td>
+
+<td>
+<input
+type="text"
+id="nama${index}"
+value="${nama}"
+placeholder="Nama anggota">
+</td>
+
+<td>
+<select id="status${index}">
+<option value="HADIR">HADIR</option>
+<option value="IZIN">IZIN</option>
+<option value="SAKIT">SAKIT</option>
+<option value="TANPA KETERANGAN">TANPA KETERANGAN</option>
+</select>
+</td>
+
+<td>
+<input
+type="text"
+id="keterangan${index}"
+placeholder="Keterangan">
+</td>
+
+</tr>
+`;
+
+});
+
+}
+
+function simpanData(){
+
+const hari =
+document.getElementById("hari").value;
+
+const tanggal =
+document.getElementById("tanggal").value;
+
+const bulan =
+document.getElementById("bulan").value;
+
+const tahun =
+document.getElementById("tahun").value;
+
+const jimpitan =
+Number(
+document.getElementById("jimpitan").value
+) || 0;
+
+if(!tanggal || !bulan || !tahun){
+
+alert("Lengkapi tanggal, bulan dan tahun");
+
+return;
+
+}
+
+const tanggalLengkap =
+`${tanggal}/${bulan}/${tahun}`;
+
+jadwal[hari].forEach((x,index)=>{
+
+const nama =
+document.getElementById(`nama${index}`).value;
+
+if(nama.trim()==="") return;
+
+const status =
+document.getElementById(`status${index}`).value;
+
+const keterangan =
+document.getElementById(`keterangan${index}`).value;
+
+data.push({
+
+id:Date.now()+index,
+
+hari,
+nama,
+status,
+keterangan,
+tanggal:tanggalLengkap,
+bulan,
+tahun,
+jimpitan:index===0 ? jimpitan : 0
+
+});
+
+});
+
+localStorage.setItem(
+"absensiRonda",
+JSON.stringify(data)
+);
+
+tampilkanData();
+
+alert("Data berhasil disimpan");
+
+}
+
+function tampilkanData(){
+
+const hasil =
+document.getElementById("hasil");
+
+hasil.innerHTML="";
+
+let total = 0;
+
+data.forEach(item=>{
+
+total += Number(item.jimpitan);
+
+hasil.innerHTML += `
+
+<tr>
+
+<td>${item.hari}</td>
+
+<td>${item.nama}</td>
+
+<td>${item.status}</td>
+
+<td>${item.keterangan}</td>
+
+<td>${item.tanggal}</td>
+
+<td>
+Rp ${Number(item.jimpitan)
+.toLocaleString("id-ID")}
+</td>
+
+<td>
+
+<button
+class="btn-warning"
+onclick="editData(${item.id})">
+Edit
+</button>
+
+<button
+class="btn-danger"
+onclick="hapusData(${item.id})">
+Hapus
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("totalJimpitan")
+.innerText =
+total.toLocaleString("id-ID");
+
+document.getElementById("jumlahData")
+.innerText =
+data.length;
+
+}
+
+function hapusData(id){
+
+if(!confirm("Hapus data ini ?"))
+return;
+
+data =
+data.filter(
+item => item.id !== id
+);
+
+localStorage.setItem(
+"absensiRonda",
+JSON.stringify(data)
+);
+
+tampilkanData();
+
+}
+
+function editData(id){
+
+const item =
+data.find(
+x => x.id === id
+);
+
+if(!item) return;
+
+const statusBaru =
+prompt(
+"Status:",
+item.status
+);
+
+if(statusBaru===null) return;
+
+const ketBaru =
+prompt(
+"Keterangan:",
+item.keterangan
+);
+
+item.status = statusBaru;
+item.keterangan = ketBaru;
+
+localStorage.setItem(
+"absensiRonda",
+JSON.stringify(data)
+);
+
+tampilkanData();
+
+}
+
+function hapusSemua(){
+
+if(
+!confirm(
+"Yakin hapus seluruh data?"
+)
+)return;
+
+data=[];
+
+localStorage.removeItem(
+"absensiRonda"
+);
+
+tampilkanData();
+
+}
+
+function filterData(){
+
+const bulan =
+document.getElementById("filterBulan").value;
+
+const tahun =
+document.getElementById("filterTahun").value;
+
+const hasil =
+document.getElementById("hasil");
+
+hasil.innerHTML="";
+
+let total=0;
+let jumlah=0;
+
+data
+.filter(item=>{
+
+if(bulan && item.bulan != bulan)
+return false;
+
+if(tahun && item.tahun != tahun)
+return false;
+
+return true;
+
+})
+.forEach(item=>{
+
+jumlah++;
+total += Number(item.jimpitan);
+
+hasil.innerHTML += `
+<tr>
+
+<td>${item.hari}</td>
+<td>${item.nama}</td>
+<td>${item.status}</td>
+<td>${item.keterangan}</td>
+<td>${item.tanggal}</td>
+
+<td>
+Rp ${Number(item.jimpitan)
+.toLocaleString("id-ID")}
+</td>
+
+<td>
+
+<button
+class="btn-warning"
+onclick="editData(${item.id})">
+Edit
+</button>
+
+<button
+class="btn-danger"
+onclick="hapusData(${item.id})">
+Hapus
+</button>
+
+</td>
+
+</tr>
+`;
+
+});
+
+document.getElementById("totalJimpitan")
+.innerText =
+total.toLocaleString("id-ID");
+
+document.getElementById("jumlahData")
+.innerText =
+jumlah;
+
+}
+
+function exportCSV(){
+
+let csv =
+"Hari,Nama,Status,Keterangan,Tanggal,Jimpitan\n";
+
+data.forEach(item=>{
+
+csv +=
+`${item.hari},${item.nama},${item.status},${item.keterangan},${item.tanggal},${item.jimpitan}\n`;
+
+});
+
+const blob =
+new Blob(
+["\uFEFF"+csv],
+{
+type:
+"text/csv;charset=utf-8;"
+}
+);
+
+const link =
+document.createElement("a");
+
+link.href =
+URL.createObjectURL(blob);
+
+link.download =
+"Absensi_Ronda_RT14.csv";
+
+link.click();
+
+}
+
+tampilkanPetugas();
+tampilkanData();
+
+</script>
+
+</body>
+</html>
